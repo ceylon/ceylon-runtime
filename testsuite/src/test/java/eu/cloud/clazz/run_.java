@@ -19,14 +19,22 @@ package eu.cloud.clazz;
 
 import java.lang.reflect.Method;
 
+import org.jboss.modules.ModuleClassLoader;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoader;
+
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
  */
 public class run_ {
     public static void main(String[] args) {
-        ClassLoader cl = run_.class.getClassLoader();
+        ClassLoader xcl = run_.class.getClassLoader();
         try {
-            cl.loadClass("org.jboss.filtered.spi.SomeSPI");
+            xcl.loadClass("org.jboss.filtered.spi.SomeSPI");
+
+            ModuleClassLoader mcl = (ModuleClassLoader) xcl;
+            ModuleLoader ml = mcl.getModule().getModuleLoader();
+            ClassLoader cl = ml.loadModule(ModuleIdentifier.create("ceylon.io", "0.5")).getClassLoader();
 
             Class<?> pp = cl.loadClass("ceylon.file.parsePath_");
             Method parse = pp.getDeclaredMethod("parsePath", String.class);

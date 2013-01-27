@@ -27,7 +27,7 @@ import com.redhat.ceylon.compiler.java.metadata.Module;
         version = "1.0.0.GA",
         dependencies = {
                 @Import(name = "org.jboss.filtered", version = "1.0.0.Alpha1"),
-                @Import(name = "ceylon.io", version = "0.5")
+                @Import(name = "org.jboss.modules", version = "main")
         })
 public class module_ {
 }
