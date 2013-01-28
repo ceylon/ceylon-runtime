@@ -27,7 +27,8 @@ import com.redhat.ceylon.compiler.java.metadata.Module;
 @Module(name = "org.jboss.filtered",
         version = "1.0.0.Alpha1",
         dependencies = {
-                @Import(name = "eu.cloud.clazz", version = "1.0.0.GA")
+                @Import(name = "eu.cloud.clazz", version = "1.0.0.GA"),
+                @Import(name = "org.jboss.modules", version = "main")
         })
 public class module_ {
 }

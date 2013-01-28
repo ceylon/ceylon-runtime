@@ -17,7 +17,12 @@
 
 package org.jboss.filtered.impl;
 
+import java.lang.reflect.Method;
+
 import org.jboss.filtered.api.SomeAPI;
+import org.jboss.modules.ModuleClassLoader;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoader;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -27,7 +32,22 @@ public class SomeImpl extends SomeAPI {
         return "Onward ";
     }
 
-    public String go(String arg) {
+    public String go(String arg) throws Exception {
+        ModuleClassLoader mcl = (ModuleClassLoader) getClass().getClassLoader();
+        ModuleLoader ml = mcl.getModule().getModuleLoader();
+        ClassLoader cl = ml.loadModule(ModuleIdentifier.create("ceylon.io", "0.5")).getClassLoader();
+
+        Class<?> pp = cl.loadClass("ceylon.file.parsePath_");
+        Method parse = pp.getDeclaredMethod("parsePath", String.class);
+        Object path = parse.invoke(null, "buuu");
+        Class<?> pc = cl.loadClass("ceylon.file.Path");
+        Method r = pc.getDeclaredMethod("getResource");
+        Class<?> rc = cl.loadClass("ceylon.file.Resource");
+        Class<?> nof = cl.loadClass("ceylon.io.newOpenFile_");
+        Method newOpenFile = nof.getDeclaredMethod("newOpenFile", rc);
+        Object ofi = newOpenFile.invoke(null, r.invoke(path));
+        System.out.println("ofi = " + ofi);
+
         return onward() + arg + "!";
     }
 }

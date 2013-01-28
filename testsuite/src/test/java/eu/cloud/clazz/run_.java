@@ -17,11 +17,8 @@
 
 package eu.cloud.clazz;
 
-import java.lang.reflect.Method;
-
-import org.jboss.modules.ModuleClassLoader;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoader;
+import org.jboss.filtered.impl.SomeImpl;
+import org.jboss.filtered.spi.SomeSPI;
 
 /**
  * @author <a href="mailto:ales.justin@jboss.org">Ales Justin</a>
@@ -32,20 +29,8 @@ public class run_ {
         try {
             xcl.loadClass("org.jboss.filtered.spi.SomeSPI");
 
-            ModuleClassLoader mcl = (ModuleClassLoader) xcl;
-            ModuleLoader ml = mcl.getModule().getModuleLoader();
-            ClassLoader cl = ml.loadModule(ModuleIdentifier.create("ceylon.io", "0.5")).getClassLoader();
-
-            Class<?> pp = cl.loadClass("ceylon.file.parsePath_");
-            Method parse = pp.getDeclaredMethod("parsePath", String.class);
-            Object path = parse.invoke(null, "buuu");
-            Class<?> pc = cl.loadClass("ceylon.file.Path");
-            Method r = pc.getDeclaredMethod("getResource");
-            Class<?> rc = cl.loadClass("ceylon.file.Resource");
-            Class<?> nof = cl.loadClass("ceylon.io.newOpenFile_");
-            Method newOpenFile = nof.getDeclaredMethod("newOpenFile", rc);
-            Object ofi = newOpenFile.invoke(null, r.invoke(path));
-            System.out.println("ofi = " + ofi);
+            SomeSPI spi = new SomeImpl();
+            spi.go("buu");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
