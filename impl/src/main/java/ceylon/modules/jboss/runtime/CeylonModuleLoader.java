@@ -87,7 +87,6 @@ public class CeylonModuleLoader extends ModuleLoader {
     private static final Set<String> JDK_MODULE_NAMES;
 
     private static final List<LogChecker> checkers;
-    private static final Map<ModuleIdentifier,ModuleIdentifier> REPLACED;
 
     static {
         final String defaultVersion = System.getProperty(Constants.PROP_CEYLON_SYSTEM_VERSION, Versions.CEYLON_VERSION_NUMBER);
@@ -108,20 +107,13 @@ public class CeylonModuleLoader extends ModuleLoader {
 
         CEYLON_RUNTIME_PATH = ModuleVersion.class.getPackage().getName().replace(".", "/");
 
-        REPLACED = new HashMap<>();
         BOOTSTRAP = new HashSet<>();
         BOOTSTRAP.add(LANGUAGE);
-        REPLACED.put(ModuleIdentifier.create("ceylon.language", "1.2.0"), LANGUAGE);
         BOOTSTRAP.add(COMMON);
-        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.common", "1.2.0"), COMMON);
         BOOTSTRAP.add(MODEL);
-        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.model", "1.2.0"), MODEL);
         BOOTSTRAP.add(CMR);
-        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.module-resolver", "1.2.0"), CMR);
         BOOTSTRAP.add(TYPECHECKER);
-        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.typechecker", "1.2.0"), TYPECHECKER);
         BOOTSTRAP.add(COMPILER);
-        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.compiler.java", "1.2.0"), COMPILER);
         BOOTSTRAP.add(MAVEN);
         BOOTSTRAP.add(MODULES);
         BOOTSTRAP.add(JANDEX);
@@ -234,10 +226,9 @@ public class CeylonModuleLoader extends ModuleLoader {
 
     @Override
     protected org.jboss.modules.Module preloadModule(ModuleIdentifier mi) throws ModuleLoadException {
-        if (BOOTSTRAP.contains(mi))
+        mi = findOverride(mi);
+        if (BOOTSTRAP.contains(mi)) {
             return org.jboss.modules.Module.getBootModuleLoader().loadModule(mi);
-        else if (REPLACED.containsKey(mi)) {
-            return org.jboss.modules.Module.getBootModuleLoader().loadModule(REPLACED.get(mi));
         }
         return super.preloadModule(mi);
     }
@@ -255,6 +246,12 @@ public class CeylonModuleLoader extends ModuleLoader {
     protected ArtifactResult findArtifact(ModuleIdentifier mi) {
         final ArtifactContext context = new ArtifactContext(mi.getName(), mi.getSlot(), ArtifactContext.CAR, ArtifactContext.JAR);
         return repository.getArtifactResult(context);
+    }
+    
+    protected ModuleIdentifier findOverride(ModuleIdentifier mi) {
+        final ArtifactContext context = new ArtifactContext(mi.getName(), mi.getSlot(), ArtifactContext.CAR, ArtifactContext.JAR);
+        ArtifactContext override = repository.getArtifactOverride(context);
+        return ModuleIdentifier.create(override.getName(), override.getVersion());
     }
 
     protected boolean isLogging(List<DependencySpec> deps, Builder builder, ArtifactResult result) {
