@@ -20,6 +20,7 @@ package ceylon.modules.jboss.runtime;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jboss.modules.AliasModuleSpec;
 import org.jboss.modules.DependencySpec;
 import org.jboss.modules.LocalLoader;
 import org.jboss.modules.Module;
@@ -85,6 +87,7 @@ public class CeylonModuleLoader extends ModuleLoader {
     private static final Set<String> JDK_MODULE_NAMES;
 
     private static final List<LogChecker> checkers;
+    private static final Map<ModuleIdentifier,ModuleIdentifier> REPLACED;
 
     static {
         final String defaultVersion = System.getProperty(Constants.PROP_CEYLON_SYSTEM_VERSION, Versions.CEYLON_VERSION_NUMBER);
@@ -105,18 +108,26 @@ public class CeylonModuleLoader extends ModuleLoader {
 
         CEYLON_RUNTIME_PATH = ModuleVersion.class.getPackage().getName().replace(".", "/");
 
+        REPLACED = new HashMap<>();
         BOOTSTRAP = new HashSet<>();
         BOOTSTRAP.add(LANGUAGE);
+        REPLACED.put(ModuleIdentifier.create("ceylon.language", "1.2.0"), LANGUAGE);
         BOOTSTRAP.add(COMMON);
+        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.common", "1.2.0"), COMMON);
         BOOTSTRAP.add(MODEL);
+        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.model", "1.2.0"), MODEL);
         BOOTSTRAP.add(CMR);
+        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.module-resolver", "1.2.0"), CMR);
         BOOTSTRAP.add(TYPECHECKER);
+        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.typechecker", "1.2.0"), TYPECHECKER);
         BOOTSTRAP.add(COMPILER);
+        REPLACED.put(ModuleIdentifier.create("com.redhat.ceylon.compiler.java", "1.2.0"), COMPILER);
         BOOTSTRAP.add(MAVEN);
         BOOTSTRAP.add(MODULES);
         BOOTSTRAP.add(JANDEX);
         BOOTSTRAP.add(LOGMANAGER);
         BOOTSTRAP.add(RUNTIME);
+        
 
         Set<String> jdkPaths = new HashSet<>();
         JDK_MODULE_NAMES = new HashSet<>();
@@ -225,7 +236,9 @@ public class CeylonModuleLoader extends ModuleLoader {
     protected org.jboss.modules.Module preloadModule(ModuleIdentifier mi) throws ModuleLoadException {
         if (BOOTSTRAP.contains(mi))
             return org.jboss.modules.Module.getBootModuleLoader().loadModule(mi);
-
+        else if (REPLACED.containsKey(mi)) {
+            return org.jboss.modules.Module.getBootModuleLoader().loadModule(REPLACED.get(mi));
+        }
         return super.preloadModule(mi);
     }
 
@@ -265,6 +278,12 @@ public class CeylonModuleLoader extends ModuleLoader {
             if (artifact == null)
                 return null;
 
+            if (!artifact.version().equals(moduleIdentifier.getSlot())) {
+                AliasModuleSpec alias = (AliasModuleSpec)ModuleSpec.buildAlias(moduleIdentifier, 
+                        ModuleIdentifier.create(artifact.name(), artifact.version())).create();
+                return alias;
+            }
+            
             final File moduleFile = artifact.artifact();
             final boolean isDefault = RepositoryManager.DEFAULT_MODULE.equals(moduleIdentifier.getName());
             boolean isMaven = artifact.type() == ArtifactResultType.MAVEN;
