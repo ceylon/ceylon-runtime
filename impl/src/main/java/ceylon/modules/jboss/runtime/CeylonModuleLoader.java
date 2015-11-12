@@ -248,7 +248,7 @@ public class CeylonModuleLoader extends ModuleLoader {
         return repository.getArtifactResult(context);
     }
     
-    protected ModuleIdentifier findOverride(ModuleIdentifier mi) {
+    public ModuleIdentifier findOverride(ModuleIdentifier mi) {
         final ArtifactContext context = new ArtifactContext(mi.getName(), mi.getSlot(), ArtifactContext.CAR, ArtifactContext.JAR);
         ArtifactContext override = repository.getArtifactOverride(context);
         return ModuleIdentifier.create(override.getName(), override.getVersion());
